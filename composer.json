@@ -1,0 +1,16 @@
+{
+  "name": "R3-N3/Rettungshunde-Einsatzapp-API",
+  "description": "PHP-API für die Rettungshunde-Einsatzapp (Android, iOS, Web)",
+  "type": "project",
+  "require": {
+    "vlucas/phpdotenv": "^5.5",
+    "phpmailer/phpmailer": "^6.9"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "lib/"
+    }
+  },
+  "minimum-stability": "stable",
+  "license": "GPL-3.0-or-later"
+}
