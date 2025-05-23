@@ -51,7 +51,7 @@ try {
 
 
     // Link erstellen
-    $link = URL."set_new_password.php?token=$token";
+    $link = API_URL."set_new_password.php?token=$token";
 
     // Send Mail
     $mail = new PHPMailer(true);
