@@ -25,7 +25,8 @@ define('EMAIL_PORT', $_ENV['EMAIL_PORT']);
 define('EMAIL_REPORTADRESS', $_ENV['EMAIL_REPORTADRESS']);
 
 // URL-Konstante
-define('API_URL', $_ENV['API_URL']);
+define('API_LINK', getenv('API_LINK') ?: $_ENV['API_LINK'] ?? '');
+
 
 // Datenbankverbindungsdaten (Ändere diese Werte!)
 define ("DSN", "mysql:host=".DB_HOST.";dbname=".DB_NAME.";charset=utf8mb4");

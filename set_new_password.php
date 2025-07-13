@@ -37,8 +37,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['new_password']) && is
     $newPassword = $_POST['new_password'];
     $token = $_POST['token'];
 
-    if (strlen($newPassword) < 6) {
-        $message = "Passwort muss mindestens 6 Zeichen lang sein.";
+    if (strlen($newPassword) < 8 ||
+    !preg_match('/[A-Z]/', $newPassword) ||
+    !preg_match('/[a-z]/', $newPassword) ||
+    !preg_match('/[0-9]/', $newPassword) ||
+    !preg_match('/[\W_]/', $newPassword)) {
+    
+        $message = "Passwort muss mindestens 8 Zeichen lang sein und Großbuchstaben, Kleinbuchstaben, Zahl und Sonderzeichen enthalten.";
         $showForm = true;
     } else {
         $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
@@ -80,7 +85,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['new_password']) && is
     <?php endif; ?>
 
     <?php if ($showForm): ?>
-        <form method="post" action="set_new_password.php">
+        <form method="post" action="?route=debug/setnewpassword&token=<?= htmlspecialchars($token) ?>">
             <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
             <label for="new_password">Neues Passwort:</label><br>
             <input type="password" name="new_password" id="new_password" required><br><br>

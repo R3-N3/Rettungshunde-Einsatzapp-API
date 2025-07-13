@@ -2,10 +2,16 @@
 header('Content-Type: application/json');
 
 require __DIR__ . '/vendor/autoload.php';
-require "db_config.php";
+require_once __DIR__ . "/db_config.php";
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+
+register_shutdown_function(function () {
+    if (!headers_sent()) {
+    sendResponse("error", "Unerearteter Serverfehler ");
+    }
+});
 
 function sendResponse($status, $message) {
     echo json_encode([
@@ -51,7 +57,8 @@ try {
 
 
     // Link erstellen
-    $link = API_URL."set_new_password.php?token=$token";
+    
+    $link = API_LINK."setnewpassword?token=$token";
 
     // Send Mail
     $mail = new PHPMailer(true);
@@ -82,4 +89,6 @@ try {
     sendResponse("error", "Mailer-Fehler: " . $e->getMessage());
 } catch (PDOException $e) {
     sendResponse("error", "Verbindungsfehler: " . $e->getMessage());
+} catch (Throwable $e) {
+    sendResponse("error", "Unbekannter Fehler: " . $e->getMessage());
 }

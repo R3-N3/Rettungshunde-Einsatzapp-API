@@ -15,7 +15,6 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST") {
     sendResponse("error", "Invalid request method.");
 }
 
-// JSON-Daten parsen
 $input = file_get_contents("php://input");
 $data = json_decode($input, true);
 
@@ -48,7 +47,7 @@ try {
         sendResponse("error", "Token expired.");
     }
 
-    // Token verlängern (180 Tage)
+    // Token verlängern
     $newExpiry = date('Y-m-d H:i:s', time() + 15552000);
     $updateStmt = $pdo->prepare("
         UPDATE " . DB_PREFIX . "tokens SET expires_at = :newExpiry WHERE token = :token
@@ -57,57 +56,59 @@ try {
     $updateStmt->bindParam(":token", $token);
     $updateStmt->execute();
 
-    // Bereiche empfangen
+    // Areas empfangen
     $areas = $data["areas"] ?? [];
-
     if (!is_array($areas) || count($areas) === 0) {
         sendResponse("error", "Keine Flächen zum Hochladen übergeben.");
     }
 
-    // Tabelle: uploaded_areas muss existieren!
-    // Beispiel-Schema:
-    // id INT AUTO_INCREMENT PRIMARY KEY
-    // name VARCHAR(255)
-    // latitude DOUBLE
-    // longitude DOUBLE
-    // color VARCHAR(16)
-    // timestamp BIGINT
+    $pdo->beginTransaction();
 
-    $stmt = $pdo->prepare("
-        INSERT INTO " . DB_PREFIX . "uploaded_areas (name, latitude, longitude, color, timestamp)
-        VALUES (:name, :latitude, :longitude, :color, :timestamp)
+    $insertAreaStmt = $pdo->prepare("
+        INSERT INTO " . DB_PREFIX . "areas (title, description, color, uploaded_to_server)
+        VALUES (:title, :description, :color, 1)
     ");
 
-    $countInserted = 0;
+    $insertCoordStmt = $pdo->prepare("
+        INSERT INTO " . DB_PREFIX . "area_coordinates (area_id, latitude, longitude, order_index)
+        VALUES (:area_id, :latitude, :longitude, :order_index)
+    ");
 
     foreach ($areas as $area) {
-        $name = $area["name"] ?? "Unbenannt";
+        $title = $area["title"] ?? "Unbenannt";
+        $description = $area["description"] ?? "";
         $color = $area["color"] ?? "#FF0000";
-        $timestamp = $area["timestamp"] ?? time();
         $points = $area["points"] ?? [];
 
         if (!is_array($points) || count($points) === 0) continue;
 
-        foreach ($points as $point) {
+        // Area einfügen
+        $insertAreaStmt->bindParam(":title", $title);
+        $insertAreaStmt->bindParam(":description", $description);
+        $insertAreaStmt->bindParam(":color", $color);
+        $insertAreaStmt->execute();
+        $areaId = $pdo->lastInsertId();
+
+        // Punkte einfügen
+        foreach ($points as $index => $point) {
             $lat = $point["lat"] ?? null;
             $lon = $point["lon"] ?? null;
-
             if ($lat === null || $lon === null) continue;
 
-            $stmt->bindParam(":name", $name);
-            $stmt->bindParam(":latitude", $lat);
-            $stmt->bindParam(":longitude", $lon);
-            $stmt->bindParam(":color", $color);
-            $stmt->bindParam(":timestamp", $timestamp);
-
-            if ($stmt->execute()) {
-                $countInserted++;
-            }
+            $insertCoordStmt->bindParam(":area_id", $areaId);
+            $insertCoordStmt->bindParam(":latitude", $lat);
+            $insertCoordStmt->bindParam(":longitude", $lon);
+            $insertCoordStmt->bindParam(":order_index", $index);
+            $insertCoordStmt->execute();
         }
     }
 
-    sendResponse("success", "$countInserted Punkte erfolgreich gespeichert.");
+    $pdo->commit();
+    sendResponse("success", "Flächen erfolgreich hochgeladen.");
 
 } catch (PDOException $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     sendResponse("error", "Datenbankfehler: " . $e->getMessage());
 }
