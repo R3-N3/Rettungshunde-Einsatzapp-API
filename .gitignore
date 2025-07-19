@@ -28,3 +28,5 @@ Thumbs.db
 
 # Uploads (optional, falls du Dateien speicherst)
 uploads/
+.env brh28
+.env demo

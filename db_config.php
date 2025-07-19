@@ -25,7 +25,7 @@ define('EMAIL_PORT', $_ENV['EMAIL_PORT']);
 define('EMAIL_REPORTADRESS', $_ENV['EMAIL_REPORTADRESS']);
 
 // URL-Konstante
-define('API_LINK', getenv('API_LINK') ?: $_ENV['API_LINK'] ?? '');
+define('PASSWORD_RESET_LINK', getenv('PASSWORD_RESET_LINK') ?: $_ENV['PASSWORD_RESET_LINK'] ?? '');
 
 
 // Datenbankverbindungsdaten (Ändere diese Werte!)
